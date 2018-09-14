@@ -1,11 +1,63 @@
-import React, { Component } from 'react';
+import React, { PureComponent } from 'react';
 import classes from './App.css';
 import Persons from '../components/Persons/Persons';
 //import ErrorBoundary from '../components/ErrorBoundary/ErrorBoundary';
 import Cockpit from '../components/Cockpit/Cockpit';
+import withClass from '../hoc/withClass';
+import Aux from '../hoc/AuxTest';
 
-class App extends Component {
-  state = {
+export const AuthContext = React.createContext(false);
+
+class App extends PureComponent {
+
+  constructor(props){
+    super(props);
+    console.log('App.js called from the constructor');
+    this.state = {
+      persons: [
+        { id: 'qwert', name: 'Max', age: 28 },
+        { id: 'asdf', name: 'Manu', age: 29 },
+        { id: 'zxcv', name: 'Stephanie', age: 26 }
+      ],
+      otherState: 'some other value',
+      showPersons: false,
+      toogleClickCounter: 0,
+      authenticated: false
+    }
+  }
+
+  componentWillMount() { // since the 2 new methods addition, it is discouraged to use this method!!!!!! 
+    console.log('app called from component will mount');
+  }
+
+  componentDidMount() {
+    console.log('app called from component DID mount');
+  }
+
+  /*shouldComponentUpdate(nextProps, nextState){
+    console.log("UPDTE app.JS inside shouldComponentUpdate", nextProps, nextState);
+    //return nextProps.persons !== this.props.persons;
+    return nextState.persons !== this.state.persons || nextState.showPersons != this.state.showPersons;
+  }*/
+
+  componentWillUpdate(nextProps, nextState) { // since the 2 new methods addition, it is discouraged to use this method!!!!!!
+      console.log("UPDTE app.JS inside componentWillUpdate", nextProps, nextState);
+  }
+
+  componentDidUpdate() {
+      console.log("UPDTE app.JS inside componentDidUpdate")
+  }
+
+  static getDerivedStateFromProps(nextProps, prevState) { // this is a new method in latest REACT version
+    console.log("UPDTE app.JS inside getDerivedStateFromProps", nextProps, prevState);
+    return prevState;
+  }
+
+  getSnapshotBeforeUpdate() {
+    console.log("UPDTE app.JS inside getSnapshotBeforeUpdate");
+  }
+
+  /*state = {
     persons: [
       { id: 'qwert', name: 'Max', age: 28 },
       { id: 'asdf', name: 'Manu', age: 29 },
@@ -13,7 +65,7 @@ class App extends Component {
     ],
     otherState: 'some other value',
     showPersons: false
-  }
+  }*/
 
   switchNameHandlerDeprecated = ( newName ) => {
     // console.log('Was clicked!');
@@ -52,20 +104,31 @@ class App extends Component {
 
   togglePersonsHandler = () => {
     const doesShow = this.state.showPersons;
-    this.setState( { showPersons: !doesShow } );
+    this.setState((prevState, props) => { 
+      return {
+        showPersons: !doesShow, 
+        toogleClickCounter: prevState.toogleClickCounter + 1 
+      }
+    });
+  }
+
+  loginHandler = () => {
+    this.setState({ authenticated: true });
   }
 
   render () {
+    console.log('app inside render');
     let persons = null;
     if ( this.state.showPersons ) {
       persons = <Persons 
           persons={this.state.persons}
           clicked={this.deletePersonHandler}
-          changed={this.nameChangedHandler}/>
+          changed={this.nameChangedHandler} 
+          />
     }
-
-    return (
+    /*return (
         <div className={classes.App}>
+          <button onClick={() => {this.setState({showPersons: true})}}>Show Persons</button>
           <Cockpit 
             appTitle={this.props.title}
             persons={this.state.persons}
@@ -74,10 +137,37 @@ class App extends Component {
           />
           {persons}
         </div>
+    );*/
+    /*return (
+      <WithClass classes={classes.App}>
+          <button onClick={() => {this.setState({showPersons: true})}}>Show Persons</button>
+          <Cockpit 
+            appTitle={this.props.title}
+            persons={this.state.persons}
+            showPersons={this.state.showPersons}
+            clicked={this.togglePersonsHandler}
+          />
+          {persons}
+      </WithClass>
+  );*/
+  return (
+    <Aux>
+        <button onClick={() => {this.setState({showPersons: true})}}>Show Persons</button>
+        <Cockpit 
+          appTitle={this.props.title}
+          persons={this.state.persons}
+          showPersons={this.state.showPersons}
+          login={this.loginHandler}
+          clicked={this.togglePersonsHandler}
+        />
+        <AuthContext.Provider value={this.state.authenticated}>
+          {persons}
+        </AuthContext.Provider>
+    </Aux>
     );
     // return React.createElement('div', {className: 'App'}, React.createElement('h1', null, 'Does this work now?'));
   }
 }
 
 //export default Radium(App);
-export default App;
+export default withClass(App, classes.App);
